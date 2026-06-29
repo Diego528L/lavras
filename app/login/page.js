@@ -28,7 +28,7 @@ export default function TelaLogin() {
         router.push("/adm");
         //router.refresh();
       } else {
-        alert("Erro ao Logar verificar com o Adm ");
+        alert(res?.error || "Erro ao Logar verificar com o Adm ");
       }
     } else {
       alert("Favor Informar Email e Senha ");

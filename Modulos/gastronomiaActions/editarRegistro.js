@@ -1,29 +1,36 @@
 "use server";
  
 import { prisma } from "@/lib/prisma.js";
+import { uploadFotoParaBlob } from "../../serveractions/uploadFotoParaBlob.js";
  
-export async function atualizarRegistro(id, dadosGastronomia) {
+export async function atualizarRegistro(formData) {
+  const id = Number(formData.get("id"));
+  const nome = String(formData.get("local") || formData.get("nome") || "").trim();
+  const categoria = String(formData.get("categoria") || "").trim();
+  const telefone = String(formData.get("contato") || formData.get("telefone") || "").trim();
+  const descricao = String(formData.get("descricao") || "").trim();
+  const fotoAtual = String(formData.get("fotoAtual") || "").trim();
+  const fotoField = formData.get("foto");
+
+  if (!id || !nome || !categoria || !descricao) {
+    return { success: false, error: "Campos obrigatorios faltando." };
+  }
  
   try {
-    console.log(
+    let foto = fotoAtual;
+    if (fotoField && typeof fotoField !== "string" && fotoField.size > 0) {
+      foto = await uploadFotoParaBlob(fotoField, "gastronomia");
+    }
  
-      "\x1b[36m%s\x1b[0m",
-      'Atualizando gastronomia ID: {id}'
-    );
- 
-      console.log(
- 
-        "\x1b[33m%s\x1b[0m",
-        'Dados da gastronomia recebidos:', dadosGastronomia
-      );
- 
-    const gastronomiaAtualizada =
-    await prisma.gastronomia.update({
- 
-      where: {
-        id: Number(id),
+    const gastronomiaAtualizada = await prisma.gastronomia.update({
+      where: { id },
+      data: {
+        nome,
+        categoria,
+        telefone,
+        descricao,
+        foto,
       },
-      data: dadosGastronomia
     });
    
     return {
@@ -33,19 +40,11 @@ export async function atualizarRegistro(id, dadosGastronomia) {
     };
  
   } catch (error) {
- 
     console.error(error);
- 
     return {
- 
       success: false,
- 
       error: "Erro ao atualizar gastronomia.",
- 
     };
- 
   }
- 
 }
- 
- 
+  

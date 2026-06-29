@@ -71,6 +71,14 @@ export default function AdmPage() {
                   Clientes
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/album"
+                  className="block font-bold rounded-2xl px-4 py-3 text-gray-700 hover:bg-indigo-100 hover:text-indigo-900"
+                >
+                  Album de Fotos
+                </Link>
+              </li>
             </ul>
           </nav>
         </aside>
@@ -170,6 +178,21 @@ export default function AdmPage() {
                 <Link
                   href="/adm/funcionarios"
                   className="mt-4 inline-block text-sm font-semibold text-pink-700 hover:bg-pink-200 hover:text-pink-900"
+                >
+                  Ver mais
+                </Link>
+              </div>
+
+              <div className="rounded-3xl border border-indigo-100 bg-indigo-100 p-5">
+                <h3 className="text-lg font-semibold text-indigo-900">
+                  Album de Fotos
+                </h3>
+                <p className="mt-2 text-gray-700">
+                  Faça upload, visualize e exclua fotos da galeria.
+                </p>
+                <Link
+                  href="/album"
+                  className="mt-4 inline-block text-sm font-semibold text-indigo-700 hover:bg-indigo-200 hover:text-indigo-900"
                 >
                   Ver mais
                 </Link>

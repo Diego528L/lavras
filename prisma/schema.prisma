@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -57,4 +56,11 @@ model hospedagem {
   telefone String
   descricao String
   foto   String
+}
+
+model foto {
+  id       Int      @id @default(autoincrement())
+  titulo   String
+  url      String
+  criadoEm DateTime @default(now())
 }

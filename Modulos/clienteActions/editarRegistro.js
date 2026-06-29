@@ -1,29 +1,32 @@
 "use server";
  
 import { prisma } from "@/lib/prisma.js";
+import { uploadFotoParaBlob } from "../../serveractions/uploadFotoParaBlob.js";
  
-export async function atualizarRegistro(id, dadosCliente) {
+export async function atualizarRegistro(formData) {
+  const id = Number(formData.get("id"));
+  const nome = String(formData.get("nome") || "").trim();
+  const comentario = String(formData.get("comentario") || "").trim();
+  const fotoAtual = String(formData.get("fotoAtual") || "").trim();
+  const fotoField = formData.get("foto");
+
+  if (!id || !nome || !comentario) {
+    return { success: false, error: "Campos obrigatorios faltando." };
+  }
  
   try {
-    console.log(
+    let foto = fotoAtual;
+    if (fotoField && typeof fotoField !== "string" && fotoField.size > 0) {
+      foto = await uploadFotoParaBlob(fotoField, "clientes");
+    }
  
-      "\x1b[36m%s\x1b[0m",
-      'Atualizando cliente ID: {id}'
-    );
- 
-      console.log(
- 
-        "\x1b[33m%s\x1b[0m",
-        'Dados do cliente recebidos:', dadosCliente
-      );
- 
-    const clienteAtualizado =
-    await prisma.cliente.update({
- 
-      where: {
-        id: Number(id),
+    const clienteAtualizado = await prisma.cliente.update({
+      where: { id },
+      data: {
+        nome,
+        comentario,
+        foto,
       },
-      data: dadosCliente
     });
    
     return {
@@ -33,19 +36,11 @@ export async function atualizarRegistro(id, dadosCliente) {
     };
  
   } catch (error) {
- 
     console.error(error);
- 
     return {
- 
       success: false,
- 
       error: "Erro ao atualizar cliente.",
- 
     };
- 
   }
- 
 }
- 
- 
+

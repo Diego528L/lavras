@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { gravarRegistro } from "../../Modulos/eventoActions/gravarRegistro.js";
 import { Get_All_Registros } from "../../Modulos/eventoActions/pegarTodos.js";
+import { atualizarRegistro } from "../../Modulos/eventoActions/editarRegistro.js";
 
 const initialForm = {
   nome: "",
@@ -17,6 +18,7 @@ export default function FormEventos() {
   const [form, setForm] = useState(initialForm);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [fotoAtualEdicao, setFotoAtualEdicao] = useState("");
 
   useEffect(() => {
     Get_All_Registros()
@@ -36,7 +38,7 @@ export default function FormEventos() {
 
   function handleFileChange(event) {
     const file = event.target.files?.[0];
-    setForm((prev) => ({ ...prev, foto: file ? file.name : "" }));
+    setForm((prev) => ({ ...prev, foto: file || "" }));
   }
 
   function handleEdit(item) {
@@ -49,6 +51,7 @@ export default function FormEventos() {
     });
     setIsEditing(true);
     setEditingId(item.id);
+    setFotoAtualEdicao(item.foto || "");
     setStatus({ message: "", type: "" });
   }
 
@@ -63,6 +66,7 @@ export default function FormEventos() {
     setForm(initialForm);
     setIsEditing(false);
     setEditingId(null);
+    setFotoAtualEdicao("");
     setStatus({ message: "", type: "" });
   }
 
@@ -76,11 +80,31 @@ export default function FormEventos() {
     }
 
     if (isEditing) {
-      setEventos((prev) =>
-        prev.map((item) => (item.id === editingId ? { ...item, nome, local, contato, descricao, foto } : item))
-      );
-      handleCancel();
-      setStatus({ message: "Evento atualizado com sucesso!", type: "success" });
+      const payloadEdicao = new FormData();
+      payloadEdicao.append("id", String(editingId));
+      payloadEdicao.append("nome", nome);
+      payloadEdicao.append("local", local);
+      payloadEdicao.append("contato", contato);
+      payloadEdicao.append("descricao", descricao);
+      payloadEdicao.append("foto", form.foto || "");
+      payloadEdicao.append("fotoAtual", fotoAtualEdicao);
+
+      atualizarRegistro(payloadEdicao)
+        .then((res) => {
+          if (res?.success) {
+            setStatus({ message: "Evento atualizado com sucesso!", type: "success" });
+            handleCancel();
+            return Get_All_Registros();
+          }
+          setStatus({ message: res?.error || "Erro ao atualizar evento.", type: "error" });
+        })
+        .then((dados) => {
+          if (dados) setEventos(dados);
+        })
+        .catch((error) => {
+          console.error(error);
+          setStatus({ message: "Erro ao atualizar evento.", type: "error" });
+        });
       return;
     }
     const payload = new FormData();
@@ -185,7 +209,11 @@ export default function FormEventos() {
             onChange={handleFileChange}
             className="w-full text-black rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
-          {form.foto && <p className="mt-2 text-sm text-gray-600">Arquivo selecionado: {form.foto}</p>}
+          {form.foto && (
+            <p className="mt-2 text-sm text-gray-600">
+              Arquivo selecionado: {typeof form.foto === "string" ? form.foto : form.foto.name}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">

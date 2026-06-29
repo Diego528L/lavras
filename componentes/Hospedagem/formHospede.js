@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { gravarRegistro } from "../../Modulos/hospedagemActions/gravarRegistro.js";
 import { Get_All_Registros } from "../../Modulos/hospedagemActions/pegarTodos.js";
+import { atualizarRegistro } from "../../Modulos/hospedagemActions/editarRegistro.js";
 
 const initialForm = {
   nome: "",
@@ -16,6 +17,7 @@ export default function FormHospede() {
   const [form, setForm] = useState(initialForm);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [fotoAtualEdicao, setFotoAtualEdicao] = useState("");
 
   useEffect(() => {
     Get_All_Registros()
@@ -35,7 +37,7 @@ export default function FormHospede() {
 
   function handleFileChange(event) {
     const file = event.target.files?.[0];
-    setForm((prev) => ({ ...prev, foto: file ? file.name : "" }));
+    setForm((prev) => ({ ...prev, foto: file || "" }));
   }
 
   function handleEdit(item) {
@@ -47,6 +49,7 @@ export default function FormHospede() {
     });
     setIsEditing(true);
     setEditingId(item.id);
+    setFotoAtualEdicao(item.foto || "");
     setStatus({ message: "", type: "" });
   }
 
@@ -61,6 +64,7 @@ export default function FormHospede() {
     setForm(initialForm);
     setIsEditing(false);
     setEditingId(null);
+    setFotoAtualEdicao("");
     setStatus({ message: "", type: "" });
   }
 
@@ -75,11 +79,30 @@ export default function FormHospede() {
     }
 
     if (isEditing) {
-      setHospedes((prev) =>
-        prev.map((item) => (item.id === editingId ? { ...item, nome, telefone, descricao, foto } : item))
-      );
-      handleCancel();
-      setStatus({ message: "Hóspede atualizado com sucesso!", type: "success" });
+      const payloadEdicao = new FormData();
+      payloadEdicao.append("id", String(editingId));
+      payloadEdicao.append("nome", nome);
+      payloadEdicao.append("telefone", telefone);
+      payloadEdicao.append("descricao", descricao);
+      payloadEdicao.append("foto", form.foto || "");
+      payloadEdicao.append("fotoAtual", fotoAtualEdicao);
+
+      atualizarRegistro(payloadEdicao)
+        .then((res) => {
+          if (res?.success) {
+            setStatus({ message: "Hospedagem atualizada com sucesso!", type: "success" });
+            handleCancel();
+            return Get_All_Registros();
+          }
+          setStatus({ message: res?.error || "Erro ao atualizar hospedagem.", type: "error" });
+        })
+        .then((dados) => {
+          if (dados) setHospedes(dados);
+        })
+        .catch((error) => {
+          console.error(error);
+          setStatus({ message: "Erro ao atualizar hospedagem.", type: "error" });
+        });
       return;
     }
 
@@ -169,7 +192,11 @@ export default function FormHospede() {
             onChange={handleFileChange}
             className="w-full text-black rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
           />
-          {form.foto && <p className="mt-2 text-sm text-gray-600">Arquivo selecionado: {form.foto}</p>}
+          {form.foto && (
+            <p className="mt-2 text-sm text-gray-600">
+              Arquivo selecionado: {typeof form.foto === "string" ? form.foto : form.foto.name}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
